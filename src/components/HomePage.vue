@@ -38,9 +38,24 @@
           <tbody>
             <tr v-for="(book, index) in books">
               <th scope="row">{{ ++index }}</th>
-              <td><a v-bind:href="book.url">{{ book.title }}</a></td>
-              <td>{{ book.author }}</td>
-              <td><button type="button" class="btn btn-outline-danger" v-on:click="deleteBook(book)"><i class="fa fa-trash-o" aria-hidden="true"></i></button></td>
+              <td>
+                <a v-if="!book.edit" v-bind:href="book.url">{{ book.title }}</a>
+                <input v-else type="text" class="form-control" v-model="book.title">
+              </td>
+              <td>
+                <div v-if="!book.edit">{{ book.author }}</div>
+                <input v-else type="text" class="form-control" v-model="book.author">
+              </td>
+              <td>
+                <div v-if="!book.edit">
+                  <button type="button" class="btn btn-outline-danger" v-on:click="deleteBook(book['.key'])"><i class="fa fa-trash-o" aria-hidden="true"></i></button>
+                  <button type="button" class="btn btn-outline-primary" v-on:click="editBook(book['.key'])"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></button>
+                </div>
+                <div v-else>
+                  <button type="button" class="btn btn-outline-success" v-on:click="saveBook(book)">Save</button>
+                  <button type="button" class="btn btn-outline-warning" v-on:click="cancelEdit(book['.key'])">Cancel</button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -83,7 +98,8 @@ export default {
       newBook: {
         title: '',
         author: '',
-        url: ''
+        url: '',
+        edit: false
       }
     }
   },
@@ -95,9 +111,18 @@ export default {
       this.newBook.url = '';
       toastr.success('Book added!');
     },
-    deleteBook: function(book) {
-      booksRef.child(book['.key']).remove();
+    deleteBook: function(key) {
+      booksRef.child(key).remove();
       toastr.success('Book removed!');
+    },
+    editBook: function(key) {
+      booksRef.child(key).update({ edit: true });
+    },
+    cancelEdit: function(key) {
+      booksRef.child(key).update({ edit: false });
+    },
+    saveBook: function(book) {
+      booksRef.child(book['.key']).update({ title: book.title, author: book.author, edit: false });
     }
   }
 }
